@@ -68,7 +68,7 @@ testing_final <- testing[, -which(names(testing) %in% c("X", "user_name", "raw_t
 
 ```
 
-##Cross Validation
+## Cross Validation
 The model was built using cross validation as trainControl with caret package (k = 10)
 
 ```{r}
@@ -76,7 +76,7 @@ trainControl<-trainControl(method="cv", number=10)
 
 ```
 
-##Model
+## Model
 
 The predictive model has been built using the random forest algorithm.
 ```{r}
