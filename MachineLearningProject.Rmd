@@ -1,0 +1,155 @@
+---
+title: "Practical Machine Learning Project"
+author: "Arcangela Cristofaro"
+date: "27 luglio 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Pre-processing
+
+- Before you create the predictive model you need to pre-process the training data by first replacing the wrong values   "#DIV0!" With NA values and converting empty strings to NA values
+- Once the conversion has been made, in order to generate a really significant predictive model, all columns containing values equal to NA have been removed from the training set and the test set
+
+```{r}
+library(caret)
+library(ggplot2)
+library(randomForest)
+
+## You should create a report describing how you built your model, how you used cross validation,
+## what you think the expected out of sample error is, and why you made the choices you did.
+## You will also use your prediction model to predict 20 different test cases.
+
+## uploading csv contaning training data set into a data.frame 
+
+training<-read.csv("C:/Users/acristofaro/Desktop/Coursera/machine learning/pml-training.csv")
+
+testing<-read.csv("C:/Users/acristofaro/Desktop/Coursera/machine learning/pml-testing.csv")
+
+## convert all the '#DIV/0!' elements in NA values
+training [training == '#DIV/0!'] <- NA
+testing[testing == '#DIV/0!'] <- NA
+
+## convert all the elements with empty string in NA values
+is.na(training) <- training==''
+is.na(testing) <- testing==''
+
+## delete from the training set and the test set the columns with some NA values
+training<-training[ , colSums(is.na(training)) == 0]
+testing<-testing[ , colSums(is.na(testing)) == 0]
+```
+
+## Predictors selection
+
+Once the data cleaning phase has been completed, the next step was to select the predictors to create the predictive model.
+In detail 
+-  the predictors containing NA values have been removed from the model
+The following columns appear unimportant for model building and their inclusion could lead to the generation of a unrealistic model. So I decided to delete them both from the training set and the test set:
+
+     - X column (first column)
+     - user_name
+     - raw_timestamp_part_1
+     - raw_timestamp_part_2
+     - cvtd_timestamp
+     - new_window
+     - num_window
+
+```{r}
+training_final <- training[, -which(names(training) %in% c("X", "user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window", "num_window"))]
+
+testing_final <- testing[, -which(names(testing) %in% c("X", "user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window", "num_window"))]
+
+```
+
+##Cross Validation
+The model was built using cross validation as trainControl with caret package (k = 10)
+
+```{r}
+trainControl<-trainControl(method="cv", number=10)
+
+```
+
+##Model
+
+The predictive model has been built using the random forest algorithm.
+```{r}
+modelFitRf<-train(classe ~.,data=training_final, method="rf", trControl=trainControl)
+modelFitRf
+```
+## Confusion Matrix
+
+Splitting the training data into a test set and a training set and calculate the confusionMatrix on the test set
+
+```{r}
+train<-createDataPartition(y=training_final$classe,p=.60, list=FALSE)
+training1 <- training_final[train,]
+test1 <- training_final[-train,]
+confusionMatrix(predict(modelFitRf, newdata=(test1)),test1$classe)
+```
+
+
+## Plot the Variable Importance
+
+```{r}
+varImpObjRf <- varImp(modelFitRf)
+plot(varImpObjRf, main = "Importance of Top 40 Variables", top = 40)
+```
+
+## Apply the prediction model 
+Apply your machine learning algorithm to the 20 test cases available in the test data
+To apply the predictive model to the 20 test cases, the last column 'problem_id' (not included in the training set) was removed from each of the 20 observations. In the following, the results obtained for each of the 20 cases
+
+```{r}
+predictions1<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][1,])
+predictions2<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][2,])
+predictions3<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][3,])
+predictions4<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][4,])
+predictions5<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][5,])
+predictions6<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][6,])
+predictions7<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][7,])
+predictions8<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][8,])
+predictions9<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][9,])
+predictions10<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][10,])
+predictions11<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][11,])
+predictions12<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][12,])
+predictions13<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][13,])
+predictions14<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][14,])
+predictions15<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][15,])
+predictions16<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][16,])
+predictions17<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][17,])
+predictions18<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][18,])
+predictions19<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][19,])
+predictions20<-predict(modelFitRf, testing[,-which(names(testing) %in% c("problem_id"))][20,])
+print(predictions1);
+print(predictions2);
+print(predictions3);
+print(predictions4);
+print(predictions5);
+print(predictions6);
+print(predictions7);
+print(predictions8);
+print(predictions9);
+print(predictions10);
+print(predictions11);
+print(predictions12);
+print(predictions13);
+print(predictions14);
+print(predictions15);
+print(predictions16);
+print(predictions17);
+print(predictions18);
+print(predictions19);
+print(predictions20);
+```
+## Conclusion
+
+The random forest algorithm has given excellent results with a very high accuracy level
+
+
